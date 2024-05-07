@@ -1,118 +1,191 @@
+import React, { useState } from "react";
+import { UseFormProps, useForm } from "react-hook-form";
+import { object, string, z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { Inter } from "next/font/google";
+import useToast from "@/hooks/useToast";
+import {
+  ArrowUpTrayIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useMutation, useQuery } from "react-query";
+import { useSkinCancerPrediction } from "@/hooks/useSkinCancerPredicts";
 
-const inter = Inter({ subsets: ["latin"] });
+export const studentProfileEditSchema = object({
+  image: string().nonempty("Please upload your profile image."),
+});
 
-export default function Home() {
-  return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+function useZodForm<TSchema extends z.ZodType>(
+  props: Omit<UseFormProps<TSchema["_input"]>, "resolver"> & {
+    schema: TSchema;
+  }
+) {
+  const form = useForm<TSchema["_input"]>({
+    ...props,
+    resolver: zodResolver(props.schema, undefined),
+  });
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+  return form;
 }
+
+const Home = () => {
+  const methods = useZodForm({
+    schema: studentProfileEditSchema,
+    defaultValues: {
+      // number: creator?.mobileNumber as string | undefined,
+    },
+  });
+
+  async function uploadFile(formData: FormData): Promise<void> {
+    try {
+      console.log("enter in upload file", formData);
+      const response = await fetch(
+        `https://skin-cancer-apis.onrender.com/predict/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      console.log("no error occur");
+
+      console.log("File uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      // Handle error accordingly
+    }
+  }
+
+  // const apiUrl = ;
+
+  const {
+    isLoading,
+    isSuccess,
+    error,
+    mutate: upload,
+    data,
+  } = useMutation(uploadFile);
+
+  const [updating, setUpdating] = useState<boolean>(false);
+
+  console.log(data, "data");
+
+  const { warningToast, errorToast, successToast } = useToast();
+  return (
+    <>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-100 w-full flex-col gap-5">
+        <form
+          className="flex flex-col w-full h-full items-center justify-center"
+          onSubmit={methods.handleSubmit(async (values) => {
+            setUpdating(true);
+            console.log(values, "values");
+
+            const fileString = values?.image;
+
+            // Create a new FormData instance
+            const formData = new FormData();
+
+            // Append the file data to the FormData instance
+            formData.append("image", fileString);
+
+            try {
+              console.log("hello world");
+              await upload(formData);
+            } catch (e) {
+              console.log(e);
+            }
+            setUpdating(false);
+          })}
+        >
+          <div className="bg-white w-[40rem] h-full rounded-xl flex flex-col gap-5 p-5">
+            {methods?.watch("image") ? (
+              <></>
+            ) : (
+              <div className="border-dashed relative top-0 left-0 right-0 bottom-0 border-2 border-neutral-400 w-full h-[23rem] rounded-xl flex items-center justify-center gap-2 flex-col">
+                <div className="absolute  top-7 w-full h-full">
+                  <div className="flex flex-col items-center justify-center gap-4 w-full h-full text-neutral-500">
+                    <ArrowUpTrayIcon className="text-sky-500 w-20" />
+                    <span className="text-xl font-medium text-neutral-700">
+                      Drag your image or Drop
+                    </span>
+                    <h2 className="text-sm ">Supports: jpg,png,jpeg</h2>
+                  </div>
+                  <input
+                    placeholder="Update file"
+                    type="file"
+                    accept="image/jpeg, image/jpg,image/png"
+                    className="z-2 absolute left-0 right-0 bottom-0 top-0 w-full h-full cursor-pointer opacity-0"
+                    onChange={(e) => {
+                      if (e.currentTarget.files && e.currentTarget.files[0]) {
+                        if (e.currentTarget.files[0].size <= 1024000) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            methods.setValue("image", reader.result as string);
+                          };
+                          reader.readAsDataURL(e.currentTarget.files[0]);
+                        } else {
+                          warningToast("Upload cover image upto 1 MB of size.");
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            {methods?.watch("image") ? (
+              <div className="flex flex-col items-center gap-5 justify-center w-full p-3 rounded-xl border-2 border-dashed border-neutral-300">
+                <div className="relative aspect-square w-full h-[20rem]  object-cover">
+                  <Image
+                    fill
+                    src={methods.watch().image}
+                    alt={`image`}
+                    className="aspect-square w-14 rounded-xl object-cover"
+                  />
+                </div>
+                <div className="w-full flex items-center gap-4">
+                  <div
+                    onClick={() => methods?.setValue("image", "")}
+                    className="py-2 px-3 w-1/2 rounded-xl flex gap-2 justify-center items-center bg-red-500 text-white cursor-pointer hover:bg-red-600 duration-150"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                    <button type="button" className="">
+                      Delete
+                    </button>
+                  </div>
+                  <button
+                    className="w-1/2 rounded-xl py-2 px-3 text-white bg-green-500 hover:bg-green-600 duration-150"
+                    type="submit"
+                  >
+                    Start Analysis
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <></>
+            )}
+          </div>
+          {/* <div className="flex w-full flex-col gap-6">
+            <div className="flex w-full flex-col  items-center gap-6 border-b border-neutral-200 p-5 md:flex-row">
+              <div className="relative aspect-square w-20 object-cover sm:w-28">
+                <Image
+                  fill
+                  src={methods.watch().image ?? "/empty/courses.svg"}
+                  alt={methods.getValues("image")}
+                  className="aspect-square w-28 rounded-full object-cover"
+                />
+              </div>
+            </div>
+          </div> */}
+        </form>
+      </div>
+    </>
+  );
+};
+
+export default Home;
