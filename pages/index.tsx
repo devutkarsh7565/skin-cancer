@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMutation, useQuery } from "react-query";
 import { useSkinCancerPrediction } from "@/hooks/useSkinCancerPredicts";
+import axios from "axios";
 
 export const studentProfileEditSchema = object({
   image: string().nonempty("Please upload your profile image."),
@@ -31,6 +32,7 @@ function useZodForm<TSchema extends z.ZodType>(
 }
 
 const Home = () => {
+  const [cancerData, setCancerData] = useState<File>();
   const methods = useZodForm({
     schema: studentProfileEditSchema,
     defaultValues: {
@@ -38,24 +40,32 @@ const Home = () => {
     },
   });
 
-  async function uploadFile(formData: FormData): Promise<void> {
+  async function uploadFile(data: File): Promise<any> {
     try {
+      // Create a new FormData instance
+      console.log(data, "data");
+      const formData = new FormData();
+
+      // Append the file data to the FormData instance
+      formData.append("file", data);
       console.log("enter in upload file", formData);
-      const response = await fetch(
-        `https://skin-cancer-apis.onrender.com/predict/`,
+      const response = await axios.post(
+        "https://skin-cancer-apis.onrender.com/predict/",
+        formData,
         {
-          method: "POST",
-          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error("Failed to upload file");
       }
 
-      console.log("no error occur");
+      console.log("no error occur", response);
 
-      console.log("File uploaded successfully");
+      return response?.data;
     } catch (error) {
       console.error("Error uploading file:", error);
       // Handle error accordingly
@@ -74,7 +84,7 @@ const Home = () => {
 
   const [updating, setUpdating] = useState<boolean>(false);
 
-  console.log(data, "data");
+  // console.log(data, "data");
 
   const { warningToast, errorToast, successToast } = useToast();
   return (
@@ -88,15 +98,9 @@ const Home = () => {
 
             const fileString = values?.image;
 
-            // Create a new FormData instance
-            const formData = new FormData();
-
-            // Append the file data to the FormData instance
-            formData.append("image", fileString);
-
             try {
               console.log("hello world");
-              await upload(formData);
+              await upload(cancerData as File);
             } catch (e) {
               console.log(e);
             }
@@ -124,6 +128,7 @@ const Home = () => {
                     onChange={(e) => {
                       if (e.currentTarget.files && e.currentTarget.files[0]) {
                         if (e.currentTarget.files[0].size <= 1024000) {
+                          setCancerData(e.currentTarget.files[0]);
                           const reader = new FileReader();
                           reader.onload = () => {
                             methods.setValue("image", reader.result as string);
@@ -170,18 +175,9 @@ const Home = () => {
               <></>
             )}
           </div>
-          {/* <div className="flex w-full flex-col gap-6">
-            <div className="flex w-full flex-col  items-center gap-6 border-b border-neutral-200 p-5 md:flex-row">
-              <div className="relative aspect-square w-20 object-cover sm:w-28">
-                <Image
-                  fill
-                  src={methods.watch().image ?? "/empty/courses.svg"}
-                  alt={methods.getValues("image")}
-                  className="aspect-square w-28 rounded-full object-cover"
-                />
-              </div>
-            </div>
-          </div> */}
+          <div className="text-red-700 text-3xl font-medium">
+            Cancer type: {isSuccess && data ? data.prediction : "Loading..."}
+          </div>
         </form>
       </div>
     </>
